@@ -4,7 +4,11 @@ import { Users, BarChart3, TrendingUp, Bookmark, Eye, FileOutput, LayoutDashboar
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AIInsights from '@/components/AIInsights';
 import CandidateMatching from '@/components/CandidateMatching';
+import RecentActivity from '@/components/RecentActivity';
+import StudentProfileModal from '@/components/StudentProfileModal';
 import Navbar from '@/components/Navbar';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -25,12 +29,36 @@ const Dashboard = () => {
   const [data, setData]           = useState(null);
   const [loading, setLoading]     = useState(true);
   const [activeTab, setActiveTab] = useState('Dashboard');
+  const [activities, setActivities] = useState([]);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/analytics/company/comp-1`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => { setData(FALLBACK); setLoading(false); });
+
+    fetch(`${API_URL}/api/analytics/company/comp-1/recent`)
+      .then(r => r.json())
+      .then(setActivities)
+      .catch(console.error);
+
+    const socket = new SockJS(`${API_URL}/ws`);
+    const client = new Client({
+      webSocketFactory: () => socket,
+      onConnect: () => {
+        client.subscribe('/topic/company/comp-1/activity', message => {
+          const activity = JSON.parse(message.body);
+          setActivities(prev => {
+            const exists = prev.some(a => a.interaction.id === activity.interaction.id);
+            if (exists) return prev;
+            return [activity, ...prev].slice(0, 10);
+          });
+        });
+      },
+    });
+    client.activate();
+    return () => client.deactivate();
   }, []);
 
   const stats = data ? [
@@ -143,6 +171,14 @@ const Dashboard = () => {
 
                     <AIInsights insight={data.aiInsight} />
                   </div>
+
+                  {/* Recent Activity section */}
+                  <div style={{ marginTop: 24 }}>
+                    <RecentActivity 
+                      activities={activities} 
+                      onViewProfile={(id) => setSelectedStudentId(id)} 
+                    />
+                  </div>
                 </>
               )}
 
@@ -170,6 +206,20 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Student Profile Modal */}
+      {selectedStudentId && (
+        <StudentProfileModal 
+          studentId={selectedStudentId} 
+          onClose={() => setSelectedStudentId(null)}
+          onVerify={async (id, status) => {
+            await fetch(`${API_URL}/api/candidates/verify/${id}?status=${status}`, { method: 'POST' });
+            setSelectedStudentId(null);
+            // Refresh counts if needed
+            fetch(`${API_URL}/api/analytics/company/comp-1`).then(r => r.json()).then(setData);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -2,6 +2,7 @@ package com.networking.config;
 
 import com.networking.model.Employee;
 import com.networking.model.JobRole;
+import com.networking.model.Project;
 import com.networking.model.Student;
 import com.networking.repository.EmployeeRepository;
 import com.networking.repository.JobRoleRepository;
@@ -28,8 +29,48 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
 
         // ── Students ─────────────────────────────────────────────────────────
-        // Students are created via the frontend signup flow only.
-        // No seeding here - deleteAll() removed for Supabase pooler compatibility.
+        if (studentRepository.count() == 0) {
+
+            studentRepository.saveAll(List.of(
+
+                Student.builder()
+                    .name("Aisha Khan")
+                    .email("aisha@demo.com")
+                    .password("demo123")
+                    .skills(List.of("Java", "Spring Boot", "SQL", "Git"))
+                    .githubUrl("https://github.com/aishakhan")
+                    .resumeText("Aisha Khan - Software Developer\n\nExperience:\n- Developed REST APIs using Spring Boot at internship\n- Built and deployed microservices with Docker\n- Led a team of 3 students for final year project\n- Won best project award at university hackathon\n\nSkills: Java, Spring Boot, SQL, Git, Problem Solving\n\nProjects: E-commerce backend, Student Portal API")
+                    .projects(List.of(
+                        Project.builder().title("E-Commerce Backend").description("REST API for an online store using Spring Boot and MySQL").build(),
+                        Project.builder().title("Student Portal").description("University management system with role-based access control").build()
+                    ))
+                    .build(),
+
+                Student.builder()
+                    .name("Bilal Raza")
+                    .email("bilal@demo.com")
+                    .password("demo123")
+                    .skills(List.of("Python", "Machine Learning", "SQL", "TensorFlow"))
+                    .githubUrl("https://github.com/bilalraza")
+                    .resumeText("Bilal Raza - Data Science Enthusiast\n\nSummary:\nPassionate about machine learning and data-driven decisions. Published research paper on sentiment analysis. Ranked top 5% in national coding competition.\n\nExperience:\n- Implemented ML models for churn prediction\n- Designed data pipelines processing 1M+ records\n- Collaborated with cross-functional teams\n\nSkills: Python, Machine Learning, TensorFlow, SQL, Communication")
+                    .projects(List.of(
+                        Project.builder().title("Churn Prediction Model").description("ML model achieving 87% accuracy using XGBoost").build(),
+                        Project.builder().title("Sentiment Analyzer").description("NLP pipeline for Twitter data analysis, published in conference").build()
+                    ))
+                    .build(),
+
+                Student.builder()
+                    .name("Sara Ahmed")
+                    .email("sara@demo.com")
+                    .password("demo123")
+                    .skills(List.of("Legal Research", "Compliance", "Communication", "Policy Analysis"))
+                    .resumeText("Sara Ahmed - Legal Technology\n\nEducation: LLB with Distinction\n\nExperience:\n- Researched compliance frameworks for FinTech startups\n- Drafted regulatory policy documents for data privacy\n- Negotiated contracts and reviewed legal agreements\n- Mentored junior law students as team captain\n\nSkills: Legal Research, Compliance, Data Privacy, Communication, Policy Analysis")
+                    .projects(List.of(
+                        Project.builder().title("GDPR Compliance Toolkit").description("Open-source checklist for startups navigating EU data regulations").build()
+                    ))
+                    .build()
+            ));
+        }
 
         // ── Employees / Mentors ──────────────────────────────────────────────
         if (employeeRepository.count() == 0) {

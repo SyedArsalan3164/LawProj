@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Brain, UserCheck, X, RefreshCw, FileText, Zap, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
+import StudentProfileModal from './StudentProfileModal';
 
-const API = 'http://localhost:8080';
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 /* ── helpers ───────────────────────────────────────────────────── */
 const scoreColor = (pct) => {
@@ -52,7 +53,7 @@ const CandidateMatching = ({ roleId }) => {
   const [loading, setLoading]               = useState(true);
   const [refreshing, setRefreshing]         = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);  // full student profile
-  const [fullProfile, setFullProfile]       = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
 
   const fetchCandidates = useCallback(async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
@@ -71,21 +72,13 @@ const CandidateMatching = ({ roleId }) => {
   useEffect(() => { fetchCandidates(); }, [fetchCandidates]);
 
   const openProfile = async (studentId, candidateData) => {
-    setSelectedCandidate(candidateData);
-    try {
-      const res  = await fetch(`${API}/api/candidates/student/${studentId}`);
-      const data = await res.json();
-      setFullProfile(data);
-    } catch (err) {
-      console.error('Profile fetch failed', err);
-    }
+    setSelectedStudentId(studentId);
   };
 
   const verifyCandidate = async (studentId, status) => {
     await fetch(`${API}/api/candidates/verify/${studentId}?status=${status}`, { method: 'POST' });
     fetchCandidates(true);
-    setSelectedCandidate(null);
-    setFullProfile(null);
+    setSelectedStudentId(null);
   };
 
   /* ── Loading ─────────────────────────────────────────────────── */
@@ -228,114 +221,13 @@ const CandidateMatching = ({ roleId }) => {
         ))}
       </div>
 
-      {/* ── Profile Modal ───────────────────────────────────── */}
-      {selectedCandidate && (
-        <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}
-          onClick={() => { setSelectedCandidate(null); setFullProfile(null); }}
-        >
-          <div
-            className="card"
-            style={{ maxWidth: 820, width: '100%', maxHeight: '90vh', overflow: 'auto', padding: 36, borderRadius: 20 }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Modal header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <ScoreRing pct={selectedCandidate.matchPercentage} size={80} />
-                <div>
-                  <div style={{ fontFamily: "'Plus Jakarta Sans'", fontWeight: 800, fontSize: '1.3rem' }}>{selectedCandidate.studentName}</div>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                    {scoreLabel(selectedCandidate.matchPercentage)} · {Math.round(selectedCandidate.matchPercentage)}% AI Match
-                  </div>
-                  {selectedCandidate.identifiedCapabilities?.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                      {selectedCandidate.identifiedCapabilities.map((c, i) => (
-                        <span key={i} className="badge badge-blue" style={{ fontSize: '0.7rem' }}>{c}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => { setSelectedCandidate(null); setFullProfile(null); }}
-                style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1 }}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="divider" style={{ marginBottom: 24 }} />
-
-            {/* AI Reasoning */}
-            <p className="section-label">AI Analysis</p>
-            <div style={{ background: 'var(--bg)', borderRadius: 10, padding: 16, fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 24, borderLeft: '3px solid var(--primary)' }}>
-              {selectedCandidate.aiReasoning?.replace(/\*\*/g, '')}
-            </div>
-
-            {/* Resume + Profile */}
-            {fullProfile ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                <div>
-                  <p className="section-label">Resume Content</p>
-                  <div style={{ background: 'var(--bg)', borderRadius: 10, padding: 16, fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: 1.65, maxHeight: 260, overflowY: 'auto' }}>
-                    {fullProfile.resumeText || 'No resume uploaded yet.'}
-                  </div>
-                  {fullProfile.githubUrl && (
-                    <div style={{ marginTop: 14 }}>
-                      <p className="section-label">GitHub</p>
-                      <a href={fullProfile.githubUrl} target="_blank" rel="noreferrer"
-                        style={{ color: 'var(--primary)', fontSize: '0.85rem', wordBreak: 'break-all' }}>
-                        {fullProfile.githubUrl}
-                      </a>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="section-label">Skills</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                    {fullProfile.skills?.length > 0
-                      ? fullProfile.skills.map((s, i) => <span key={i} className="badge badge-blue">{s}</span>)
-                      : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>No skills listed</span>}
-                  </div>
-                  <p className="section-label">Projects</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 200, overflowY: 'auto' }}>
-                    {fullProfile.projects?.length > 0
-                      ? fullProfile.projects.map((p, i) => (
-                          <div key={i} style={{ background: 'var(--bg)', borderRadius: 8, padding: '10px 14px' }}>
-                            <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 3 }}>{p.title}</div>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{p.description}</div>
-                          </div>
-                        ))
-                      : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>No projects listed</span>}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px 0', fontSize: '0.85rem' }}>
-                Loading full profile…
-              </div>
-            )}
-
-            {/* Modal actions */}
-            <div style={{ display: 'flex', gap: 12, marginTop: 28 }}>
-              <button
-                className="btn btn-primary"
-                style={{ flex: 2, gap: 8 }}
-                onClick={() => verifyCandidate(selectedCandidate.studentId, 'VERIFIED')}
-              >
-                <CheckCircle size={16} /> Verify & Shortlist
-              </button>
-              <button
-                className="btn"
-                style={{ flex: 1, background: 'rgba(239,68,68,0.07)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.15)', gap: 6 }}
-                onClick={() => verifyCandidate(selectedCandidate.studentId, 'REJECTED')}
-              >
-                <XCircle size={14} /> Reject
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Profile Modal */}
+      {selectedStudentId && (
+        <StudentProfileModal 
+          studentId={selectedStudentId}
+          onClose={() => setSelectedStudentId(null)}
+          onVerify={verifyCandidate}
+        />
       )}
 
       <style jsx>{`

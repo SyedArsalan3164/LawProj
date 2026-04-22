@@ -10,6 +10,7 @@ import java.util.List;
 public interface InteractionRepository extends JpaRepository<Interaction, Long> {
     List<Interaction> findByCompanyId(String companyId);
     List<Interaction> findByJobPostId(String jobPostId);
+    List<Interaction> findTop10ByCompanyIdOrderByTimestampDesc(String companyId);
 
     @Query("SELECT i FROM Interaction i WHERE (i.senderId = :id1 AND i.receiverId = :id2) OR (i.senderId = :id2 AND i.receiverId = :id1) ORDER BY i.timestamp ASC")
     List<Interaction> findChatHistory(String id1, String id2);

@@ -19,6 +19,11 @@ public class AnalyticsController {
         return service.getCompanyAnalytics(companyId);
     }
 
+    @GetMapping("/company/{companyId}/recent")
+    public java.util.List<com.networking.dto.InteractionActivity> getRecentInteractions(@PathVariable String companyId) {
+        return service.getRecentStudentInteractions(companyId);
+    }
+
     @PostMapping("/record")
     public void recordInteraction(@RequestBody Interaction interaction) {
         if (interaction.getTimestamp() == null) {
