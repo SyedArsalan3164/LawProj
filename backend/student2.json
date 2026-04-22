@@ -1,0 +1,9 @@
+﻿{
+  "name": "Sarah Chen",
+  "email": "sarah@example.com",
+  "skills": ["React", "CSS", "TypeScript", "Node.js"],
+  "projects": [
+    { "title": "Portfolio CMS", "description": "A custom CMS for designers.", "link": "github.com/sarah/cms" }
+  ],
+  "appliedJobRoleIds": ["1"]
+}

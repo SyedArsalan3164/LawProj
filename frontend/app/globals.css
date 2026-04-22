@@ -1,0 +1,402 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ============================================================
+   DESIGN TOKENS
+============================================================ */
+:root {
+  --primary:        #4f46e5;
+  --primary-hover:  #4338ca;
+  --primary-light:  rgba(79, 70, 229, 0.08);
+  --primary-border: rgba(79, 70, 229, 0.2);
+
+  --success:        #10b981;
+  --success-light:  rgba(16, 185, 129, 0.08);
+  --warning:        #f59e0b;
+  --danger:         #ef4444;
+
+  --bg:             #f1f5f9;
+  --surface:        #ffffff;
+  --surface-raised: #ffffff;
+
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+
+  --border:         #e2e8f0;
+  --border-strong:  #cbd5e1;
+
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-2xl: 32px;
+
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md:  0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+  --shadow-lg:  0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+  --shadow-xl:  0 20px 25px -5px rgba(0,0,0,0.08), 0 10px 10px -5px rgba(0,0,0,0.03);
+}
+
+/* ============================================================
+   RESET & BASE
+============================================================ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+a { text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+input, textarea, select { font-family: inherit; }
+
+/* ============================================================
+   CARDS / SURFACES
+============================================================ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Backwards-compat alias used everywhere */
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--primary-hover); box-shadow: var(--shadow-md); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+}
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.btn-ghost:hover { background: var(--bg); color: var(--text-primary); }
+
+.btn-dark {
+  background: var(--text-primary);
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  transition: background 0.15s;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-dark:hover { background: #000; }
+
+/* ============================================================
+   FORM ELEMENTS
+============================================================ */
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+.input::placeholder { color: var(--text-muted); }
+
+/* ============================================================
+   BADGES
+============================================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.badge-green {
+  background: var(--success-light);
+  color: var(--success);
+}
+.badge-blue {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 48px;
+  height: 72px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.top-nav .nav-links {
+  display: flex;
+  gap: 36px;
+  align-items: center;
+}
+
+.top-nav a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.top-nav.dark-bg a { color: rgba(255,255,255,0.75); }
+.top-nav.dark-bg a:hover,
+.top-nav.dark-bg a.active { color: #fff; }
+
+.top-nav.light-bg a { color: var(--text-secondary); }
+.top-nav.light-bg a:hover,
+.top-nav.light-bg a.active { color: var(--primary); }
+
+/* ============================================================
+   HERO SECTION
+============================================================ */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 280px;
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 0 100%);
+  z-index: -1;
+}
+
+/* ============================================================
+   LAYOUT
+============================================================ */
+.page-wrapper {
+  position: relative;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.page-body {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 48px 64px;
+}
+
+.page-header {
+  margin-bottom: 32px;
+  padding-top: 8px;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.page-header p {
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.75);
+}
+
+.two-col-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* ============================================================
+   SECTION HEADINGS
+============================================================ */
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+/* ============================================================
+   ANIMATIONS
+============================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeUp 0.45s ease-out forwards;
+}
+
+/* ============================================================
+   AVATARS
+============================================================ */
+.avatar-sm {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.85rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.avatar-md {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.avatar-lg {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.5rem;
+  background: var(--primary);
+  color: white;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   DIVIDERS
+============================================================ */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* ============================================================
+   STAT CARDS
+============================================================ */
+.stat-card {
+  padding: 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+.stat-icon {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+
+/* ============================================================
+   CHAT
+============================================================ */
+.chat-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  min-height: 240px;
+  max-height: 360px;
+  overflow-y: auto;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.msg-sent {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 16px 16px 4px 16px;
+  max-width: 75%;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  box-shadow: 0 2px 6px rgba(79,70,229,0.25);
+}
+
+.msg-received {
+  align-self: flex-start;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 10px 16px;
+  border-radius: 16px 16px 16px 4px;
+  max-width: 75%;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border: 1px solid var(--border);
+}
+
+/* ============================================================
+   UTILITY
+============================================================ */
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }

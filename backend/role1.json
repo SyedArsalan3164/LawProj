@@ -1,0 +1,7 @@
+﻿{
+  "title": "Backend Software Engineer",
+  "description": "Looking for a student who knows Java and Spring Boot.",
+  "companyId": "comp-1",
+  "requiredSkills": ["Java", "Spring Boot"],
+  "department": "Engineering"
+}

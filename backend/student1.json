@@ -1,0 +1,10 @@
+﻿{
+  "name": "Alex Rivera",
+  "email": "alex@example.com",
+  "skills": ["Java", "Spring Boot", "React", "Docker"],
+  "projects": [
+    { "title": "Microservices Architecture", "description": "Built a scalable microservices system using Spring Cloud.", "link": "github.com/alex/micro" },
+    { "title": "Real-time Chat", "description": "A socket-based chat application with React.", "link": "github.com/alex/chat" }
+  ],
+  "appliedJobRoleIds": ["1", "2"]
+}
