@@ -28,12 +28,8 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
 
         // ── Students ─────────────────────────────────────────────────────────
-        // Wipe all existing students (including mock ones) from the DB on startup
-        studentRepository.deleteAll();
-        
-        if (studentRepository.count() == 0) {
-            // Students are now created via the frontend signup flow.
-        }
+        // Students are created via the frontend signup flow only.
+        // No seeding here - deleteAll() removed for Supabase pooler compatibility.
 
         // ── Employees / Mentors ──────────────────────────────────────────────
         if (employeeRepository.count() == 0) {
