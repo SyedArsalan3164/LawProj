@@ -8,23 +8,25 @@ import com.networking.dto.StudentMatchResult;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * AI Engine — analyses student fit based on:
- *  1. Skill overlap with the job role
- *  2. Resume text (extracted from uploaded PDF)
- *  3. Chat message quality & depth
- *  4. Interaction volume & employee recommendations
- *
- * Score breakdown:
- *   Skill Match        40%
- *   Resume Analysis    30%
- *   Chat Quality       20%
- *   Recommendations    10%
+ *  1. Skill overlap with the job role (Local Algorithm)
+ *  2. Resume text (Gemini AI Analysis)
+ *  3. Chat message quality & depth (Gemini AI Analysis)
+ *  4. Interaction volume & employee recommendations (Local Data)
  */
 @Service
 public class AIService {
+
+    @Autowired
+    private GeminiService geminiService;
+
+    // ─── Legacy keyword banks (Retained as fallbacks if API fails) ──────────
 
     // ─── Weighted keyword banks ─────────────────────────────────────────────
 
@@ -79,17 +81,17 @@ public class AIService {
 
     public StudentMatchResult analyzeStudentFit(Student student, JobRole role, List<Interaction> interactions) {
 
-        /* 1. Skill Match (0-1) */
+        /* 1. Skill Match (0-1) - Local Calculation */
         double skillScore = calculateSkillMatch(student.getSkills(), role.getRequiredSkills());
 
-        /* 2. Resume Score (0-1) */
-        double resumeScore = analyzeResumeText(student.getResumeText());
+        /* 2. Resume Score (0-1) - Gemini AI */
+        double resumeScore = analyzeResumeTextWithAI(student.getResumeText());
 
-        /* 3. Chat Quality (0-1) */
+        /* 3. Chat Quality (0-1) - Gemini AI */
         String chatText = extractChatText(interactions);
-        double chatScore = analyzeChatQuality(chatText, interactions.size());
+        double chatScore = analyzeChatQualityWithAI(chatText, interactions.size());
 
-        /* 4. Recommendation bonus (0-1) */
+        /* 4. Recommendation bonus (0-1) - Local Calculation */
         double recommendationScore = interactions.stream()
                 .anyMatch(i -> i.getType() == InteractionType.FEEDBACK) ? 1.0 : 0.0;
 
@@ -102,8 +104,14 @@ public class AIService {
         // Clamp to [0,100]
         double matchPct = Math.min(total * 100.0, 100.0);
 
-        List<String> capabilities = buildCapabilityProfile(student, chatText, interactions, resumeScore, skillScore);
-        String reasoning = buildReasoning(student, role, matchPct, skillScore, resumeScore, chatScore, recommendationScore > 0, capabilities);
+        // Get capabilities and reasoning from Gemini
+        Map<String, Object> aiInsights = getAIInsights(student, role, matchPct, skillScore, resumeScore, chatScore, recommendationScore > 0);
+        
+        List<String> capabilities = (List<String>) aiInsights.getOrDefault("capabilities", 
+                buildCapabilityProfile(student, chatText, interactions, resumeScore, skillScore));
+        
+        String reasoning = (String) aiInsights.getOrDefault("reasoning", 
+                buildReasoning(student, role, matchPct, skillScore, resumeScore, chatScore, recommendationScore > 0, capabilities));
 
         return StudentMatchResult.builder()
                 .studentId(student.getId())
@@ -115,6 +123,20 @@ public class AIService {
     }
 
     // ─── Resume Analysis ─────────────────────────────────────────────────────
+
+    private double analyzeResumeTextWithAI(String resumeText) {
+        if (resumeText == null || resumeText.isBlank()) return 0.1;
+
+        String prompt = "Evaluate this student resume text and give a score from 0.0 to 1.0 based on experience, leadership, and technical depth. " +
+                "Return ONLY the number.\n\nResume Text:\n" + resumeText;
+        
+        try {
+            String result = geminiService.generateContent(prompt).trim();
+            return Double.parseDouble(result);
+        } catch (Exception e) {
+            return analyzeResumeText(resumeText); // Fallback to local
+        }
+    }
 
     private double analyzeResumeText(String resumeText) {
         if (resumeText == null || resumeText.isBlank()) return 0.1; // No resume → low base
@@ -137,6 +159,20 @@ public class AIService {
     }
 
     // ─── Chat Quality ────────────────────────────────────────────────────────
+
+    private double analyzeChatQualityWithAI(String chatText, int totalInteractions) {
+        if (chatText.isBlank()) return totalInteractions > 0 ? 0.25 : 0.0;
+
+        String prompt = "Analyze this student-mentor chat history. Score the student's communication quality, professionalism, and curiosity from 0.0 to 1.0. " +
+                "Return ONLY the number.\n\nChat History:\n" + chatText;
+
+        try {
+            String result = geminiService.generateContent(prompt).trim();
+            return Double.parseDouble(result);
+        } catch (Exception e) {
+            return analyzeChatQuality(chatText, totalInteractions); // Fallback
+        }
+    }
 
     private double analyzeChatQuality(String chatText, int totalInteractions) {
         if (chatText.isBlank()) return totalInteractions > 0 ? 0.25 : 0.0;
@@ -176,6 +212,43 @@ public class AIService {
                 .count();
 
         return (double) matches / requiredSkills.size();
+    }
+
+    // ─── AI Insights ────────────────────────────────────────────────────────
+
+    private Map<String, Object> getAIInsights(
+            Student student, JobRole role, double matchPct,
+            double skillScore, double resumeScore, double chatScore, boolean isRecommended) {
+
+        String prompt = String.format(
+            "Based on the following candidate data for the role '%s', provide:\n" +
+            "1. A list of 3-5 capability tags (e.g. 'Engineering Depth', 'Leadership Potential').\n" +
+            "2. A 2-3 sentence professional reasoning summary explaining the match score of %.0f%%.\n\n" +
+            "Data:\n" +
+            "- Candidate: %s\n" +
+            "- Skill Match: %.0f%%\n" +
+            "- Resume Score: %.0f%%\n" +
+            "- Chat Quality: %.0f%%\n" +
+            "- Mentor Recommended: %b\n\n" +
+            "Return JSON format: {\"capabilities\": [\"tag1\", \"tag2\"], \"reasoning\": \"text\"}",
+            role.getTitle(), matchPct, student.getName(), skillScore * 100, resumeScore * 100, chatScore * 100, isRecommended
+        );
+
+        Map<String, Object> insights = new HashMap<>();
+        try {
+            JsonNode node = geminiService.getStructuredAnalysis(prompt);
+            if (node.has("capabilities")) {
+                List<String> caps = new ArrayList<>();
+                node.get("capabilities").forEach(n -> caps.add(n.asText()));
+                insights.put("capabilities", caps);
+            }
+            if (node.has("reasoning")) {
+                insights.put("reasoning", node.get("reasoning").asText());
+            }
+        } catch (Exception e) {
+            // Insights remains empty, caller handles fallbacks
+        }
+        return insights;
     }
 
     // ─── Capability profile ──────────────────────────────────────────────────
@@ -287,13 +360,27 @@ public class AIService {
         long chats          = interactions.stream().filter(i -> i.getType() == InteractionType.CHAT).count();
         long feedback       = interactions.stream().filter(i -> i.getType() == InteractionType.FEEDBACK).count();
 
-        if (applications == 0) {
-            return "No applications yet. Tip: Students who chat more than 5 times convert at 3× the rate. Encourage engagement.";
+        if (applications == 0 && chats == 0) {
+            return "Pipeline is currently empty. Suggestion: Students who engage in chat are 3x more likely to convert. Start reaching out to talent.";
         }
-        return String.format(
-            "Pipeline: %d applications | %d chat interactions | %d mentor recommendations. " +
-            "AI recommends shortlisting candidates with >70%% match score first.",
-            applications, chats, feedback);
+
+        String prompt = String.format(
+            "Generate a one-sentence strategic insight for a company recruiter based on this activity data:\n" +
+            "- Total Applications: %d\n" +
+            "- Chat Interactions: %d\n" +
+            "- Mentor Feedback Given: %d\n\n" +
+            "Focus on conversion trends and talent engagement. Keep it professional and actionable.",
+            applications, chats, feedback
+        );
+
+        try {
+            return geminiService.generateContent(prompt).trim();
+        } catch (Exception e) {
+            return String.format(
+                "Pipeline: %d applications | %d chat interactions | %d mentor recommendations. " +
+                "AI recommends shortlisting candidates with >70%% match score first.",
+                applications, chats, feedback);
+        }
     }
 
     // ─── Legacy compatibility ─────────────────────────────────────────────────
