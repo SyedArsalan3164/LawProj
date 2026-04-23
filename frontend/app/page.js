@@ -4,9 +4,9 @@ import Navbar from '@/components/Navbar';
 import { ArrowRight, Brain, Zap, ShieldCheck } from 'lucide-react';
 
 const cards = [
-  { icon: '🎓', title: 'Student Hub',       desc: 'Upload resume, chat with mentors, get AI-ranked',   href: '/student/login',           accent: '#4f46e5' },
-  { icon: '🤝', title: 'Employee Portal',   desc: 'Assess candidates & feed the AI ranking engine',    href: '/employee',           accent: '#ec4899' },
-  { icon: '🏢', title: 'Company Dashboard', desc: 'AI-powered analytics & ranked candidate pipeline',  href: '/company/dashboard',  accent: '#10b981' },
+  { icon: '', title: 'Student Hub',       desc: 'Upload resume, chat with mentors, get AI-ranked',   href: '/student/login',           accent: '#4f46e5' },
+  { icon: '', title: 'Employee Portal',   desc: 'Assess candidates & feed the AI ranking engine',    href: '/employee',           accent: '#ec4899' },
+  { icon: '', title: 'Company Dashboard', desc: 'AI-powered analytics & ranked candidate pipeline',  href: '/company/dashboard',  accent: '#10b981' },
 ];
 
 const features = [
